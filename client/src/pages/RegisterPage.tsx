@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Box, Typography, TextField, Button, Alert, CircularProgress, MenuItem, Link } from '@mui/material';
+import { Box, Typography, TextField, Button, Alert, CircularProgress, MenuItem, Link, Paper } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, Link as RouterLink, Navigate } from 'react-router-dom';
 
@@ -39,67 +39,69 @@ const RegisterPage = () => {
 
   return (
     <Box maxWidth={400} mx="auto">
-      <Typography variant="h4" gutterBottom>Register</Typography>
-      <form onSubmit={handleSubmit}>
-        <TextField
-          label="Name"
-          name="name"
-          value={form.name}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-          required
-        />
-        <TextField
-          label="Email"
-          name="email"
-          type="email"
-          value={form.email}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-          required
-        />
-        <TextField
-          label="Password"
-          name="password"
-          type="password"
-          value={form.password}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-          required
-        />
-        <TextField
-          select
-          label="Role"
-          name="role"
-          value={form.role}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-        >
-          <MenuItem value="student">Student</MenuItem>
-          <MenuItem value="teacher">Teacher</MenuItem>
-        </TextField>
-        {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
-        {success && <Alert severity="success" sx={{ mt: 2 }}>{success}</Alert>}
-        <Button
-          type="submit"
-          variant="contained"
-          color="primary"
-          fullWidth
-          sx={{ mt: 2 }}
-          disabled={loading}
-        >
-          {loading ? <CircularProgress size={24} /> : 'Register'}
-        </Button>
-      </form>
-      <Box mt={2} textAlign="center">
-        <Link component={RouterLink} to="/login">
-          Already have an account? Login
-        </Link>
-      </Box>
+      <Paper elevation={6} sx={{ p: 4 }}>
+        <Typography variant="h4" gutterBottom>Register</Typography>
+        <form onSubmit={handleSubmit}>
+          <TextField
+            label="Name"
+            name="name"
+            value={form.name}
+            onChange={handleChange}
+            fullWidth
+            margin="normal"
+            required
+          />
+          <TextField
+            label="Email"
+            name="email"
+            type="email"
+            value={form.email}
+            onChange={handleChange}
+            fullWidth
+            margin="normal"
+            required
+          />
+          <TextField
+            label="Password"
+            name="password"
+            type="password"
+            value={form.password}
+            onChange={handleChange}
+            fullWidth
+            margin="normal"
+            required
+          />
+          <TextField
+            select
+            label="Role"
+            name="role"
+            value={form.role}
+            onChange={handleChange}
+            fullWidth
+            margin="normal"
+          >
+            <MenuItem value="student">Student</MenuItem>
+            <MenuItem value="teacher">Teacher</MenuItem>
+          </TextField>
+          {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
+          {success && <Alert severity="success" sx={{ mt: 2 }}>{success}</Alert>}
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            fullWidth
+            sx={{ mt: 2 }}
+            disabled={loading}
+          >
+            {loading ? <CircularProgress size={24} /> : 'Register'}
+          </Button>
+        </form>
+        <Box mt={2} textAlign="center">
+          <Link component={RouterLink} to="/login">
+            Already have an account? Login
+          </Link>
+        </Box>
+      </Paper>
     </Box>
   );
 };

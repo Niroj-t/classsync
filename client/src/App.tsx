@@ -28,7 +28,7 @@ function App() {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Assignment Management
           </Typography>
-          {user && (
+          {user ? (
             <>
               <Button
                 color="inherit"
@@ -41,6 +41,24 @@ function App() {
               </Button>
               <Button color="inherit" onClick={handleLogout}>
                 Logout
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                color="inherit"
+                component={RouterLink}
+                to="/login"
+                sx={{ mr: 1 }}
+              >
+                Login
+              </Button>
+              <Button
+                color="inherit"
+                component={RouterLink}
+                to="/register"
+              >
+                Sign Up
               </Button>
             </>
           )}
