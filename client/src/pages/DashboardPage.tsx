@@ -9,11 +9,6 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import LogoutIcon from '@mui/icons-material/Logout';
-import DeleteIcon from '@mui/icons-material/Delete';
-import DialogActions from '@mui/material/DialogActions';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
@@ -53,8 +48,6 @@ const DashboardPage = () => {
   // For notification dot demo
   const [hasUnread, setHasUnread] = useState(true);
   const [openCreate, setOpenCreate] = useState(false);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const fetchAssignments = async () => {
@@ -91,6 +84,28 @@ const DashboardPage = () => {
   if (user.role === 'teacher') {
     // For stats (use only available data)
     const totalAssignments = assignments.length;
+    const [submissionCounts, setSubmissionCounts] = useState<{ [assignmentId: string]: number }>({});
+
+    useEffect(() => {
+      if (!token || assignments.length === 0) return;
+      const fetchCounts = async () => {
+        const counts: { [assignmentId: string]: number } = {};
+        await Promise.all(assignments.map(async (a) => {
+          try {
+            const res = await axios.get(`/api/submissions/assignment/${a._id || a.id}`, {
+              baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            counts[a._id || a.id] = res.data.data.pagination?.total || 0;
+          } catch {
+            counts[a._id || a.id] = 0;
+          }
+        }));
+        setSubmissionCounts(counts);
+      };
+      fetchCounts();
+    }, [token, assignments]);
+
     // If you want to show real submission/graded/pending stats, fetch or compute them from backend or related data
     // For now, use placeholders or just totalAssignments
     const totalSubmissions = 0; // Placeholder, update with real data if available
@@ -138,35 +153,6 @@ const DashboardPage = () => {
         </Box>
         <Dialog open={openCreate} onClose={() => setOpenCreate(false)} maxWidth="md" fullWidth>
           <NewAssignmentPage inDialog onClose={() => setOpenCreate(false)} />
-        </Dialog>
-        <Dialog open={!!deleteId} onClose={() => setDeleteId(null)}>
-          <DialogTitle>Delete Assignment</DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              Are you sure you want to delete this assignment? This action cannot be undone.
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setDeleteId(null)} disabled={deleting}>Cancel</Button>
-            <Button color="error" onClick={async () => {
-              if (!deleteId) return;
-              setDeleting(true);
-              try {
-                await axios.delete(`/api/assignments/${deleteId}`, {
-                  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
-                  headers: { Authorization: `Bearer ${token}` },
-                });
-                setAssignments(prev => prev.filter(a => (a._id || a.id) !== deleteId));
-                setDeleteId(null);
-              } catch {
-                // Optionally show error
-                setDeleting(false);
-              }
-              setDeleting(false);
-            }} disabled={deleting}>
-              Delete
-            </Button>
-          </DialogActions>
         </Dialog>
         {/* Stats Overview */}
         <Grid container spacing={3} mb={4}>
@@ -235,9 +221,9 @@ const DashboardPage = () => {
                 <TableRow>
                   <TableCell sx={{ fontWeight: 700 }}>Assignment</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Due Date</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Submissions</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Action</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }} align="right">Delete</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -263,16 +249,12 @@ const DashboardPage = () => {
                         <Typography fontSize={13} color="text.secondary">{a.description}</Typography>
                       </TableCell>
                       <TableCell>{due.toLocaleDateString()}</TableCell>
+                      <TableCell>{submissionCounts[a._id || a.id] ?? 0}</TableCell>
                       <TableCell>
                         <Chip label={status} size="small" sx={{ fontWeight: 600, bgcolor: bg, color: color }} />
                       </TableCell>
                       <TableCell>
                         <Button component={RouterLink} to={`/assignments/${a._id || a.id}`} size="small" sx={{ textTransform: 'none', fontWeight: 500 }}>View</Button>
-                      </TableCell>
-                      <TableCell align="right">
-                        <IconButton color="error" onClick={() => setDeleteId(a._id || a.id)} disabled={deleting}>
-                          <DeleteIcon />
-                        </IconButton>
                       </TableCell>
                     </TableRow>
                   );

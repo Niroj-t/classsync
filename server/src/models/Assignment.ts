@@ -30,7 +30,13 @@ const assignmentSchema = new Schema<IAssignment>({
     required: [true, 'Please provide a due date'],
     validate: {
       validator: function(value: Date) {
-        return value > new Date();
+        // Only validate dueDate is in the future on create, not on update/soft delete
+        // 'this' refers to the document
+        // @ts-ignore
+        if (this.isNew) {
+          return value > new Date();
+        }
+        return true;
       },
       message: 'Due date must be in the future'
     }
