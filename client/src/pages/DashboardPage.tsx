@@ -1,9 +1,24 @@
 import { useEffect, useState } from 'react';
-import { Box, Typography, Paper, List, ListItem, ListItemText, CircularProgress, Alert, Button, Stack } from '@mui/material';
+import {
+  Box, Typography, Card, CardContent, Grid, Avatar, Stack, Badge, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Chip, Dialog
+} from '@mui/material';
+import { blue, orange, green, red } from '@mui/material/colors';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import LogoutIcon from '@mui/icons-material/Logout';
+import DeleteIcon from '@mui/icons-material/Delete';
+import DialogActions from '@mui/material/DialogActions';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
-import { Link as RouterLink } from 'react-router-dom';
-import { ListItemSecondaryAction } from '@mui/material';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import logo from '../assets/react.svg';
+import NewAssignmentPage from './NewAssignmentPage';
 
 interface Assignment {
   id: string;
@@ -22,6 +37,7 @@ interface Submission {
     title: string;
     dueDate: string;
     maxScore?: number;
+    description?: string;
   };
   status: string;
   score?: number;
@@ -30,28 +46,26 @@ interface Submission {
 }
 
 const DashboardPage = () => {
-  const { user, token } = useAuth();
+  const { user, token, logout } = useAuth();
+  const navigate = useNavigate();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [subLoading, setSubLoading] = useState(false);
-  const [subError, setSubError] = useState<string | null>(null);
+  // For notification dot demo
+  const [hasUnread, setHasUnread] = useState(true);
+  const [openCreate, setOpenCreate] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const fetchAssignments = async () => {
-      setLoading(true);
-      setError(null);
       try {
         const res = await axios.get('/api/assignments', {
           baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
           headers: { Authorization: `Bearer ${token}` },
         });
         setAssignments(res.data.data.assignments || []);
-      } catch (err: any) {
-        setError(err.response?.data?.message || 'Failed to fetch assignments');
-      } finally {
-        setLoading(false);
+      } catch {
+        setAssignments([]);
       }
     };
     if (token) fetchAssignments();
@@ -59,102 +73,382 @@ const DashboardPage = () => {
 
   useEffect(() => {
     if (token && user?.role === 'student') {
-      setSubLoading(true);
-      setSubError(null);
       axios.get('/api/submissions/my', {
         baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
         headers: { Authorization: `Bearer ${token}` },
       })
         .then(res => setSubmissions(res.data.data.submissions || []))
-        .catch(err => setSubError(err.response?.data?.message || 'Failed to fetch submissions'))
-        .finally(() => setSubLoading(false));
+        .catch(() => setSubmissions([]));
     }
   }, [token, user]);
 
   if (!user) return null;
 
-  return (
-    <Box>
-      <Typography variant="h4" gutterBottom>Dashboard</Typography>
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Typography variant="h6">Welcome, {user.name}!</Typography>
-        <Typography>Email: {user.email}</Typography>
-        <Typography>Role: {user.role.charAt(0).toUpperCase() + user.role.slice(1)}</Typography>
-      </Paper>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h5">
-          {user.role === 'teacher' ? 'Your Assignments' : 'Available Assignments'}
-        </Typography>
-        {user.role === 'teacher' && (
-          <Button
-            variant="contained"
-            color="primary"
-            component={RouterLink}
-            to="/assignments/new"
-          >
-            + Create Assignment
-          </Button>
-        )}
-      </Stack>
-      {loading ? (
-        <CircularProgress />
-      ) : error ? (
-        <Alert severity="error">{error}</Alert>
-      ) : assignments.length === 0 ? (
-        <Typography>No assignments found.</Typography>
-      ) : (
-        <List>
-          {assignments.map(a => (
-            <ListItem key={a._id || a.id} divider>
-              <ListItemText
-                primary={
-                  <Button
-                    component={RouterLink}
-                    to={`/assignments/${a._id || a.id}`}
-                    color="primary"
-                    sx={{ textTransform: 'none', pl: 0 }}
-                  >
-                    {a.title}
-                  </Button>
-                }
-                secondary={`Due: ${new Date(a.dueDate).toLocaleString()}${user.role === 'teacher' && a.createdBy ? ` | Created by: ${a.createdBy.name}` : ''}`}
-              />
-            </ListItem>
-          ))}
-        </List>
-      )}
-      {user.role === 'student' && (
-        <Box mt={4}>
-          <Typography variant="h5" gutterBottom>My Submissions</Typography>
-          {subLoading ? (
-            <CircularProgress />
-          ) : subError ? (
-            <Alert severity="error">{subError}</Alert>
-          ) : submissions.length === 0 ? (
-            <Typography>No submissions yet.</Typography>
-          ) : (
-            <List>
-              {submissions.map(s => (
-                <ListItem key={s._id} divider>
-                  <ListItemText
-                    primary={
-                      <Button
-                        component={RouterLink}
-                        to={`/assignments/${s.assignmentId._id}`}
-                        color="primary"
-                        sx={{ textTransform: 'none', pl: 0 }}
-                      >
-                        {s.assignmentId.title}
-                      </Button>
-                    }
-                    secondary={`Submitted: ${new Date(s.submittedAt).toLocaleString()} | Status: ${s.status}${typeof s.score === 'number' ? ` | Score: ${s.score}${s.assignmentId.maxScore ? '/' + s.assignmentId.maxScore : ''}` : ''}${s.feedback ? ` | Feedback: ${s.feedback}` : ''}`}
-                  />
-                </ListItem>
-              ))}
-            </List>
-          )}
+  // --- User Avatar Helper ---
+  const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase();
+
+  // --- TEACHER DASHBOARD ---
+  if (user.role === 'teacher') {
+    // For stats (use only available data)
+    const totalAssignments = assignments.length;
+    // If you want to show real submission/graded/pending stats, fetch or compute them from backend or related data
+    // For now, use placeholders or just totalAssignments
+    const totalSubmissions = 0; // Placeholder, update with real data if available
+    const totalGraded = 0; // Placeholder
+    const totalPending = 0; // Placeholder
+
+    // For the table
+    const now = new Date();
+    const recentAssignments = assignments.slice(0, 5); // or sort by date, etc.
+    return (
+      <Box sx={{ bgcolor: '#f7fafd', minHeight: '100vh', pb: 6 }}>
+        {/* Navbar */}
+        <Box sx={{ bgcolor: 'white', boxShadow: 1, borderRadius: 2, mb: 4, px: 3, py: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Avatar src={logo} sx={{ mr: 1, bgcolor: 'transparent', width: 40, height: 40 }} />
+            <Typography variant="h6" fontWeight={700} color="primary.main" sx={{ letterSpacing: 1 }}>
+              Class Sync
+            </Typography>
+            <Stack direction="row" spacing={2} sx={{ ml: 4 }}>
+              <Button component={RouterLink} to="/dashboard" color="primary" sx={{ fontWeight: 700, borderBottom: '2px solid', borderColor: 'primary.main', borderRadius: 0 }}>Dashboard</Button>
+              <Button color="inherit" sx={{ fontWeight: 500 }} onClick={() => setOpenCreate(true)}>Create Assignment</Button>
+              <Button component={RouterLink} to="/assignments" color="inherit" sx={{ fontWeight: 500 }}>Assignments</Button>
+              <Button component={RouterLink} to="/profile" color="inherit" sx={{ fontWeight: 500 }}>Profile</Button>
+            </Stack>
+          </Box>
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Badge color="error" variant="dot" invisible={!hasUnread} sx={{ mr: 1 }}>
+              <IconButton color="primary" onClick={() => setHasUnread(false)}>
+                <NotificationsIcon />
+              </IconButton>
+            </Badge>
+            <Avatar sx={{ bgcolor: blue[500], width: 36, height: 36, fontWeight: 700 }}>{getInitials(user.name)}</Avatar>
+            <Typography fontWeight={600}>{user.name}</Typography>
+            <IconButton
+              color="error"
+              onClick={() => {
+                logout();
+                navigate('/');
+              }}
+              title="Logout"
+            >
+              <LogoutIcon />
+            </IconButton>
+          </Stack>
         </Box>
-      )}
+        <Dialog open={openCreate} onClose={() => setOpenCreate(false)} maxWidth="md" fullWidth>
+          <NewAssignmentPage inDialog onClose={() => setOpenCreate(false)} />
+        </Dialog>
+        <Dialog open={!!deleteId} onClose={() => setDeleteId(null)}>
+          <DialogTitle>Delete Assignment</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to delete this assignment? This action cannot be undone.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteId(null)} disabled={deleting}>Cancel</Button>
+            <Button color="error" onClick={async () => {
+              if (!deleteId) return;
+              setDeleting(true);
+              try {
+                await axios.delete(`/api/assignments/${deleteId}`, {
+                  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
+                  headers: { Authorization: `Bearer ${token}` },
+                });
+                setAssignments(prev => prev.filter(a => (a._id || a.id) !== deleteId));
+                setDeleteId(null);
+              } catch {
+                // Optionally show error
+                setDeleting(false);
+              }
+              setDeleting(false);
+            }} disabled={deleting}>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+        {/* Stats Overview */}
+        <Grid container spacing={3} mb={4}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
+              <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
+                <Avatar sx={{ bgcolor: blue[100], color: blue[700], mr: 2, width: 48, height: 48 }}>
+                  <AssignmentIcon sx={{ fontSize: 32 }} />
+                </Avatar>
+                <Box>
+                  <Typography variant="h5" fontWeight={700}>{totalAssignments}</Typography>
+                  <Typography color="text.secondary" fontSize={15}>Total Assignments</Typography>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
+              <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
+                <Avatar sx={{ bgcolor: green[100], color: green[700], mr: 2, width: 48, height: 48 }}>
+                  <CheckCircleIcon sx={{ fontSize: 32 }} />
+                </Avatar>
+                <Box>
+                  <Typography variant="h5" fontWeight={700}>{totalSubmissions}</Typography>
+                  <Typography color="text.secondary" fontSize={15}>Submissions</Typography>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
+              <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
+                <Avatar sx={{ bgcolor: blue[50], color: blue[700], mr: 2, width: 48, height: 48 }}>
+                  <CheckCircleIcon sx={{ fontSize: 32 }} />
+                </Avatar>
+                <Box>
+                  <Typography variant="h5" fontWeight={700}>{totalGraded}</Typography>
+                  <Typography color="text.secondary" fontSize={15}>Graded</Typography>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
+              <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
+                <Avatar sx={{ bgcolor: orange[100], color: orange[700], mr: 2, width: 48, height: 48 }}>
+                  <AccessTimeIcon sx={{ fontSize: 32 }} />
+                </Avatar>
+                <Box>
+                  <Typography variant="h5" fontWeight={700}>{totalPending}</Typography>
+                  <Typography color="text.secondary" fontSize={15}>Pending</Typography>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+        {/* Recent Assignments Table */}
+        <Box>
+          <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+            <Typography variant="h6" fontWeight={700}>Recent Assignments</Typography>
+            <Button component={RouterLink} to="/assignments" size="small" sx={{ textTransform: 'none', fontWeight: 500 }}>View all</Button>
+          </Stack>
+          <TableContainer component={Paper} sx={{ borderRadius: 3, boxShadow: 1 }}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 700 }}>Assignment</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Due Date</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Action</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }} align="right">Delete</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {recentAssignments.map((a) => {
+                  // Compute status and color
+                  const due = new Date(a.dueDate);
+                  let status = 'Active';
+                  let color = blue[700] as string;
+                  let bg = blue[100] as string;
+                  if (!a.isActive) {
+                    status = 'Inactive';
+                    color = red[700] as string;
+                    bg = red[100] as string;
+                  } else if (due < now) {
+                    status = 'Overdue';
+                    color = orange[700] as string;
+                    bg = orange[100] as string;
+                  }
+                  return (
+                    <TableRow key={a._id || a.id}>
+                      <TableCell>
+                        <Typography fontWeight={600}>{a.title}</Typography>
+                        <Typography fontSize={13} color="text.secondary">{a.description}</Typography>
+                      </TableCell>
+                      <TableCell>{due.toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        <Chip label={status} size="small" sx={{ fontWeight: 600, bgcolor: bg, color: color }} />
+                      </TableCell>
+                      <TableCell>
+                        <Button component={RouterLink} to={`/assignments/${a._id || a.id}`} size="small" sx={{ textTransform: 'none', fontWeight: 500 }}>View</Button>
+                      </TableCell>
+                      <TableCell align="right">
+                        <IconButton color="error" onClick={() => setDeleteId(a._id || a.id)} disabled={deleting}>
+                          <DeleteIcon />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
+      </Box>
+    );
+  }
+
+  // --- STUDENT DASHBOARD ---
+  if (user.role !== 'student') return null;
+
+  // --- Summary Card Calculations (real data) ---
+  const totalAssignments = assignments.length;
+  const submittedIds = new Set(submissions.map(s => s.assignmentId._id));
+  const now = new Date();
+  const pendingAssignments = assignments.filter(a => {
+    const due = new Date(a.dueDate);
+    return !submittedIds.has(a._id || a.id) && due >= now;
+  });
+  const overdueAssignments = assignments.filter(a => {
+    const due = new Date(a.dueDate);
+    return !submittedIds.has(a._id || a.id) && due < now;
+  });
+  const submittedCount = submissions.length;
+
+  // --- Recent Assignments Table Data (real data) ---
+  const recentAssignments = assignments
+    .sort((a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime())
+    .slice(0, 5);
+
+  return (
+    <Box sx={{ bgcolor: '#f7fafd', minHeight: '100vh', pb: 6 }}>
+      {/* Header */}
+      <Box sx={{ bgcolor: 'white', boxShadow: 1, borderRadius: 2, mb: 4, px: 3, py: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Avatar src={logo} sx={{ mr: 1, bgcolor: 'transparent', width: 40, height: 40 }} />
+          <Typography variant="h6" fontWeight={700} color="primary.main" sx={{ letterSpacing: 1 }}>
+            Class Sync
+          </Typography>
+          <Stack direction="row" spacing={2} sx={{ ml: 4 }}>
+            <Button component={RouterLink} to="/dashboard" color="primary" sx={{ fontWeight: 700, borderBottom: '2px solid', borderColor: 'primary.main', borderRadius: 0 }}>Dashboard</Button>
+            <Button component={RouterLink} to="/assignments" color="inherit" sx={{ fontWeight: 500 }}>Assignments</Button>
+            <Button component={RouterLink} to="/profile" color="inherit" sx={{ fontWeight: 500 }}>Profile</Button>
+          </Stack>
+        </Box>
+        <Stack direction="row" spacing={2} alignItems="center">
+          <Badge color="error" variant="dot" invisible={!hasUnread} sx={{ mr: 1 }}>
+            <IconButton color="primary" onClick={() => setHasUnread(false)}>
+              <NotificationsIcon />
+            </IconButton>
+          </Badge>
+          <Avatar sx={{ bgcolor: blue[500], width: 36, height: 36, fontWeight: 700 }}>{getInitials(user.name)}</Avatar>
+          <Typography fontWeight={600}>{user.name}</Typography>
+          <IconButton
+            color="error"
+            onClick={() => {
+              logout();
+              navigate('/'); // <-- redirect to landing page after logout
+            }}
+            title="Logout"
+          >
+            <LogoutIcon />
+          </IconButton>
+        </Stack>
+      </Box>
+
+      {/* Summary Cards */}
+      <Grid container spacing={3} mb={4}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
+            <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
+              <Avatar sx={{ bgcolor: blue[100], color: blue[700], mr: 2 }}>
+                <AssignmentIcon />
+              </Avatar>
+              <Box>
+                <Typography variant="h6" fontWeight={700}>{totalAssignments}</Typography>
+                <Typography color="text.secondary" fontSize={15}>Total Assignments</Typography>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
+            <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
+              <Avatar sx={{ bgcolor: orange[100], color: orange[700], mr: 2 }}>
+                <AccessTimeIcon />
+              </Avatar>
+              <Box>
+                <Typography variant="h6" fontWeight={700}>{pendingAssignments.length}</Typography>
+                <Typography color="text.secondary" fontSize={15}>Pending</Typography>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
+            <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
+              <Avatar sx={{ bgcolor: green[100], color: green[700], mr: 2 }}>
+                <CheckCircleIcon />
+              </Avatar>
+              <Box>
+                <Typography variant="h6" fontWeight={700}>{submittedCount}</Typography>
+                <Typography color="text.secondary" fontSize={15}>Submitted</Typography>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
+            <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
+              <Avatar sx={{ bgcolor: red[100], color: red[700], mr: 2 }}>
+                <WarningAmberIcon />
+              </Avatar>
+              <Box>
+                <Typography variant="h6" fontWeight={700}>{overdueAssignments.length}</Typography>
+                <Typography color="text.secondary" fontSize={15}>Overdue</Typography>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Recent Assignments Table */}
+      <Box>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+          <Typography variant="h6" fontWeight={700}>Recent Assignments</Typography>
+          <Button component={RouterLink} to="/assignments" size="small" sx={{ textTransform: 'none', fontWeight: 500 }}>View all</Button>
+        </Stack>
+        <TableContainer component={Paper} sx={{ borderRadius: 3, boxShadow: 1 }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 700 }}>Assignment</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Due Date</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Action</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {recentAssignments.map(a => {
+                const due = new Date(a.dueDate);
+                const isOverdue = due < now && !submittedIds.has(a._id || a.id);
+                const isSubmitted = submittedIds.has(a._id || a.id);
+                let status = 'Pending';
+                let color = 'warning';
+                if (isSubmitted) {
+                  status = 'Submitted';
+                  color = 'success';
+                } else if (isOverdue) {
+                  status = 'Overdue';
+                  color = 'error';
+                }
+                return (
+                  <TableRow key={a._id || a.id}>
+                    <TableCell>
+                      <Typography fontWeight={600}>{a.title}</Typography>
+                      <Typography fontSize={13} color="text.secondary">{a.description}</Typography>
+                    </TableCell>
+                    <TableCell>{due.toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      <Chip label={status} color={color as any} size="small" sx={{ fontWeight: 600, bgcolor: color === 'warning' ? orange[100] : color === 'success' ? green[100] : red[100], color: color === 'warning' ? orange[700] : color === 'success' ? green[700] : red[700] }} />
+                    </TableCell>
+                    <TableCell>
+                      <Button component={RouterLink} to={`/assignments/${a._id || a.id}`} size="small" sx={{ textTransform: 'none', fontWeight: 500 }}>View</Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Box>
     </Box>
   );
 };
