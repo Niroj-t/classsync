@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Box, Typography, TextField, Button, Alert, CircularProgress, Link, Paper } from '@mui/material';
+import { Box, Typography, TextField, Button, Alert, CircularProgress, Link} from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, Link as RouterLink, Navigate } from 'react-router-dom';
 
@@ -27,46 +27,44 @@ const LoginPage = () => {
   };
 
   return (
-    <Box maxWidth={400} mx="auto">
-      <Paper elevation={6} sx={{ p: 4 }}>
-        <Typography variant="h4" gutterBottom>Login</Typography>
-        <form onSubmit={handleSubmit}>
-          <TextField
-            label="Email"
-            type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            fullWidth
-            margin="normal"
-            required
-          />
-          <TextField
-            label="Password"
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            fullWidth
-            margin="normal"
-            required
-          />
-          {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            fullWidth
-            sx={{ mt: 2 }}
-            disabled={loading}
-          >
-            {loading ? <CircularProgress size={24} /> : 'Login'}
-          </Button>
-        </form>
-        <Box mt={2} textAlign="center">
-          <Link component={RouterLink} to="/register">
-            Don&apos;t have an account? Register
-          </Link>
-        </Box>
-      </Paper>
+    <Box maxWidth={400} mx="auto" sx={{ p: 4 }}>
+      <Typography variant="h4" gutterBottom>Login</Typography>
+      <form onSubmit={handleSubmit}>
+        <TextField
+          label="Email"
+          type="email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          fullWidth
+          margin="normal"
+          required
+        />
+        <TextField
+          label="Password"
+          type="password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          fullWidth
+          margin="normal"
+          required
+        />
+        {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
+        <Button
+          type="submit"
+          variant="contained"
+          color="primary"
+          fullWidth
+          sx={{ mt: 2 }}
+          disabled={loading}
+        >
+          {loading ? <CircularProgress size={24} /> : 'Login'}
+        </Button>
+      </form>
+      <Box mt={2} textAlign="center">
+        <Link component={RouterLink} to="/register">
+          Don&apos;t have an account? Register
+        </Link>
+      </Box>
     </Box>
   );
 };
