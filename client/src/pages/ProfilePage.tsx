@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Box, Typography, TextField, Button, Alert, Paper } from '@mui/material';
+import { Box, Typography, TextField, Button, Alert, Dialog, DialogTitle, DialogContent, DialogActions, IconButton } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -11,6 +12,7 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [open, setOpen] = useState(true);
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,6 +35,10 @@ const ProfilePage = () => {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
+      // Close modal after successful password change
+      setTimeout(() => {
+        setOpen(false);
+      }, 2000);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to change password');
     } finally {
@@ -40,11 +46,26 @@ const ProfilePage = () => {
     }
   };
 
+  const handleClose = () => {
+    setOpen(false);
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setError(null);
+    setSuccess(null);
+  };
+
   return (
-    <Box maxWidth={400} mx="auto" mt={4}>
-      <Paper sx={{ p: 4 }}>
-        <Typography variant="h4" gutterBottom>Profile</Typography>
-        <Typography variant="h6" gutterBottom>Change Password</Typography>
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+      <DialogTitle>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Typography variant="h6">Change Password</Typography>
+          <IconButton onClick={handleClose} size="small">
+            <CloseIcon />
+          </IconButton>
+        </Box>
+      </DialogTitle>
+      <DialogContent>
         <form onSubmit={handleChangePassword}>
           <TextField
             label="Current Password"
@@ -75,19 +96,22 @@ const ProfilePage = () => {
           />
           {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
           {success && <Alert severity="success" sx={{ mt: 2 }}>{success}</Alert>}
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            fullWidth
-            sx={{ mt: 2 }}
-            disabled={loading}
-          >
-            {loading ? 'Changing...' : 'Change Password'}
-          </Button>
         </form>
-      </Paper>
-    </Box>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleClose} color="inherit">
+          Cancel
+        </Button>
+        <Button
+          onClick={handleChangePassword}
+          variant="contained"
+          color="primary"
+          disabled={loading}
+        >
+          {loading ? 'Changing...' : 'Change Password'}
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };
 

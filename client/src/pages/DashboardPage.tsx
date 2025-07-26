@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import {
-  Box, Typography, Card, CardContent, Grid, Avatar, Stack, Badge, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Chip, Dialog
+  Box, Typography, Card, CardContent, Grid, Avatar, Stack, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Chip, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Alert
 } from '@mui/material';
 import { blue, orange, green, red } from '@mui/material/colors';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import NotificationsIcon from '@mui/icons-material/Notifications';
 import LogoutIcon from '@mui/icons-material/Logout';
+import CloseIcon from '@mui/icons-material/Close';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
@@ -45,9 +45,16 @@ const DashboardPage = () => {
   const navigate = useNavigate();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
-  // For notification dot demo
-  const [hasUnread, setHasUnread] = useState(true);
   const [openCreate, setOpenCreate] = useState(false);
+  
+  // Password change modal state
+  const [openPasswordModal, setOpenPasswordModal] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
 
   const fetchAssignments = async () => {
     try {
@@ -59,6 +66,47 @@ const DashboardPage = () => {
     } catch {
       setAssignments([]);
     }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError(null);
+    setPasswordSuccess(null);
+    if (newPassword !== confirmPassword) {
+      setPasswordError('New passwords do not match.');
+      return;
+    }
+    setPasswordLoading(true);
+    try {
+      await axios.put('/api/users/change-password', {
+        currentPassword,
+        newPassword,
+      }, {
+        baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setPasswordSuccess('Password changed successfully!');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      // Close modal after successful password change
+      setTimeout(() => {
+        setOpenPasswordModal(false);
+      }, 2000);
+    } catch (err: any) {
+      setPasswordError(err.response?.data?.message || 'Failed to change password');
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  const handleClosePasswordModal = () => {
+    setOpenPasswordModal(false);
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setPasswordError(null);
+    setPasswordSuccess(null);
   };
 
   useEffect(() => {
@@ -128,15 +176,10 @@ const DashboardPage = () => {
               <Button component={RouterLink} to="/dashboard" color="primary" sx={{ fontWeight: 700, borderBottom: '2px solid', borderColor: 'primary.main', borderRadius: 0 }}>Dashboard</Button>
               <Button color="inherit" sx={{ fontWeight: 500 }} onClick={() => setOpenCreate(true)}>Create Assignment</Button>
               <Button component={RouterLink} to="/assignments" color="inherit" sx={{ fontWeight: 500 }}>Assignments</Button>
-              <Button component={RouterLink} to="/profile" color="inherit" sx={{ fontWeight: 500 }}>Profile</Button>
+              <Button color="inherit" sx={{ fontWeight: 500 }} onClick={() => setOpenPasswordModal(true)}>Profile</Button>
             </Stack>
           </Box>
           <Stack direction="row" spacing={2} alignItems="center">
-            <Badge color="error" variant="dot" invisible={!hasUnread} sx={{ mr: 1 }}>
-              <IconButton color="primary" onClick={() => setHasUnread(false)}>
-                <NotificationsIcon />
-              </IconButton>
-            </Badge>
             <Avatar sx={{ bgcolor: blue[500], width: 36, height: 36, fontWeight: 700 }}>{getInitials(user.name)}</Avatar>
             <Typography fontWeight={600}>{user.name}</Typography>
             <IconButton
@@ -157,6 +200,64 @@ const DashboardPage = () => {
             onClose={() => setOpenCreate(false)} 
             onAssignmentCreated={fetchAssignments}
           />
+        </Dialog>
+
+        {/* Password Change Modal */}
+        <Dialog open={openPasswordModal} onClose={handleClosePasswordModal} maxWidth="sm" fullWidth>
+          <DialogTitle>
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Typography variant="h6">Change Password</Typography>
+              <IconButton onClick={handleClosePasswordModal} size="small">
+                <CloseIcon />
+              </IconButton>
+            </Box>
+          </DialogTitle>
+          <DialogContent>
+            <form onSubmit={handleChangePassword}>
+              <TextField
+                label="Current Password"
+                type="password"
+                value={currentPassword}
+                onChange={e => setCurrentPassword(e.target.value)}
+                fullWidth
+                margin="normal"
+                required
+              />
+              <TextField
+                label="New Password"
+                type="password"
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                fullWidth
+                margin="normal"
+                required
+              />
+              <TextField
+                label="Confirm New Password"
+                type="password"
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+                fullWidth
+                margin="normal"
+                required
+              />
+              {passwordError && <Alert severity="error" sx={{ mt: 2 }}>{passwordError}</Alert>}
+              {passwordSuccess && <Alert severity="success" sx={{ mt: 2 }}>{passwordSuccess}</Alert>}
+            </form>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleClosePasswordModal} color="inherit">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleChangePassword}
+              variant="contained"
+              color="primary"
+              disabled={passwordLoading}
+            >
+              {passwordLoading ? 'Changing...' : 'Change Password'}
+            </Button>
+          </DialogActions>
         </Dialog>
         {/* Stats Overview */}
         <Grid container spacing={3} mb={4}>
@@ -292,15 +393,10 @@ const DashboardPage = () => {
           <Stack direction="row" spacing={2} sx={{ ml: 4 }}>
             <Button component={RouterLink} to="/dashboard" color="primary" sx={{ fontWeight: 700, borderBottom: '2px solid', borderColor: 'primary.main', borderRadius: 0 }}>Dashboard</Button>
             <Button component={RouterLink} to="/assignments" color="inherit" sx={{ fontWeight: 500 }}>Assignments</Button>
-            <Button component={RouterLink} to="/profile" color="inherit" sx={{ fontWeight: 500 }}>Profile</Button>
+            <Button color="inherit" sx={{ fontWeight: 500 }} onClick={() => setOpenPasswordModal(true)}>Profile</Button>
           </Stack>
         </Box>
         <Stack direction="row" spacing={2} alignItems="center">
-          <Badge color="error" variant="dot" invisible={!hasUnread} sx={{ mr: 1 }}>
-            <IconButton color="primary" onClick={() => setHasUnread(false)}>
-              <NotificationsIcon />
-            </IconButton>
-          </Badge>
           <Avatar sx={{ bgcolor: blue[500], width: 36, height: 36, fontWeight: 700 }}>{getInitials(user.name)}</Avatar>
           <Typography fontWeight={600}>{user.name}</Typography>
           <IconButton
@@ -422,6 +518,64 @@ const DashboardPage = () => {
           </Table>
         </TableContainer>
       </Box>
+
+      {/* Password Change Modal */}
+      <Dialog open={openPasswordModal} onClose={handleClosePasswordModal} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Typography variant="h6">Change Password</Typography>
+            <IconButton onClick={handleClosePasswordModal} size="small">
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <form onSubmit={handleChangePassword}>
+            <TextField
+              label="Current Password"
+              type="password"
+              value={currentPassword}
+              onChange={e => setCurrentPassword(e.target.value)}
+              fullWidth
+              margin="normal"
+              required
+            />
+            <TextField
+              label="New Password"
+              type="password"
+              value={newPassword}
+              onChange={e => setNewPassword(e.target.value)}
+              fullWidth
+              margin="normal"
+              required
+            />
+            <TextField
+              label="Confirm New Password"
+              type="password"
+              value={confirmPassword}
+              onChange={e => setConfirmPassword(e.target.value)}
+              fullWidth
+              margin="normal"
+              required
+            />
+            {passwordError && <Alert severity="error" sx={{ mt: 2 }}>{passwordError}</Alert>}
+            {passwordSuccess && <Alert severity="success" sx={{ mt: 2 }}>{passwordSuccess}</Alert>}
+          </form>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClosePasswordModal} color="inherit">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleChangePassword}
+            variant="contained"
+            color="primary"
+            disabled={passwordLoading}
+          >
+            {passwordLoading ? 'Changing...' : 'Change Password'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
