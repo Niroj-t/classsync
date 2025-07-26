@@ -5,7 +5,12 @@ import RegisterPage from '../pages/RegisterPage';
 import CloseIcon from '@mui/icons-material/Close';
 import logo from '../assets/react.svg';
 
-export default function Navbar() {
+interface NavbarProps {
+  user?: { name: string } | null;
+  onLogout?: () => void;
+}
+
+export default function Navbar({ user, onLogout }: NavbarProps) {
   const [openLogin, setOpenLogin] = useState(false);
   const [openRegister, setOpenRegister] = useState(false);
 
@@ -19,12 +24,20 @@ export default function Navbar() {
           </Typography>
         </Box>
         <Box>
-          <Button color="primary" variant="outlined" sx={{ mr: 1 }} onClick={() => setOpenLogin(true)}>
-            Login
-          </Button>
-          <Button color="primary" variant="contained" onClick={() => setOpenRegister(true)}>
-            Sign Up
-          </Button>
+          {user ? (
+            <Button color="error" variant="outlined" onClick={onLogout}>
+              Logout
+            </Button>
+          ) : (
+            <>
+              <Button color="primary" variant="outlined" sx={{ mr: 1 }} onClick={() => setOpenLogin(true)}>
+                Login
+              </Button>
+              <Button color="primary" variant="contained" onClick={() => setOpenRegister(true)}>
+                Sign Up
+              </Button>
+            </>
+          )}
         </Box>
       </Toolbar>
       <Dialog open={openLogin} onClose={() => setOpenLogin(false)} maxWidth="xs" fullWidth>

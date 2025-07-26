@@ -31,7 +31,7 @@ function App() {
           element={
             !user ? (
               <>
-                <Navbar />
+                <Navbar user={user} onLogout={handleLogout} />
                 <Hero />
                 <Footer />
               </>
