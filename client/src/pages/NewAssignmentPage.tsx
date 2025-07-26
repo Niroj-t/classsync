@@ -19,7 +19,6 @@ const NewAssignmentPage = ({ inDialog = false, onClose, onAssignmentCreated }: N
     title: '',
     description: '',
     dueDate: '',
-    maxScore: 100,
     instructions: '',
   });
   const [files, setFiles] = useState<File[]>([]);
@@ -105,16 +104,6 @@ const NewAssignmentPage = ({ inDialog = false, onClose, onAssignmentCreated }: N
           margin="normal"
           required
           InputLabelProps={{ shrink: true }}
-        />
-        <TextField
-          label="Max Score"
-          name="maxScore"
-          type="number"
-          value={form.maxScore}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-          inputProps={{ min: 0, max: 100 }}
         />
         <TextField
           label="Instructions"

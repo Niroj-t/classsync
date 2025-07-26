@@ -1,44 +1,25 @@
 import express from 'express';
-import { body } from 'express-validator';
-import {
-  getSubmissionsByAssignment,
-  getMySubmissions,
-  submitAssignment,
-  updateSubmission,
-  gradeSubmission
+import { authenticateJWT, requireTeacher } from '../middleware/auth';
+import { 
+  getSubmissionsByAssignment, 
+  getMySubmissions, 
+  submitAssignment, 
+  updateSubmission 
 } from '../controllers/submissionController';
-import { authenticateJWT, requireTeacher, requireStudent } from '../middleware/auth';
-import { uploadMultiple } from '../utils/fileUpload';
+import { body } from 'express-validator';
 
 const router = express.Router();
 
 // Validation middleware
 const submissionValidation = [
-  body('assignmentId')
-    .isMongoId()
-    .withMessage('Valid assignment ID is required'),
-  body('files')
-    .optional()
-    .isArray()
-    .withMessage('Files must be an array')
-];
-
-const gradingValidation = [
-  body('score')
-    .isInt({ min: 0 })
-    .withMessage('Score must be a non-negative integer'),
-  body('feedback')
-    .optional()
-    .trim()
-    .isLength({ max: 1000 })
-    .withMessage('Feedback cannot exceed 1000 characters')
+  body('text').optional().trim().isLength({ min: 1 }).withMessage('Text cannot be empty'),
+  body('files').optional().isArray().withMessage('Files must be an array')
 ];
 
 // Routes
 router.get('/assignment/:assignmentId', authenticateJWT, getSubmissionsByAssignment);
-router.get('/my', authenticateJWT, requireStudent, getMySubmissions);
-router.post('/', authenticateJWT, requireStudent, uploadMultiple, submissionValidation, submitAssignment);
-router.put('/:id', authenticateJWT, requireStudent, uploadMultiple, submissionValidation, updateSubmission);
-router.put('/:id/grade', authenticateJWT, requireTeacher, gradingValidation, gradeSubmission);
+router.get('/my', authenticateJWT, getMySubmissions);
+router.post('/', authenticateJWT, submissionValidation, submitAssignment);
+router.put('/:id', authenticateJWT, submissionValidation, updateSubmission);
 
 export default router;

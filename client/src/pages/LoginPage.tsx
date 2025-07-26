@@ -1,9 +1,13 @@
 import { useState } from 'react';
 import { Box, Typography, TextField, Button, Alert, CircularProgress, Link} from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate, Link as RouterLink, Navigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 
-const LoginPage = () => {
+interface LoginPageProps {
+  onSwitchToRegister?: () => void;
+}
+
+const LoginPage = ({ onSwitchToRegister }: LoginPageProps) => {
   const { login, loading, user } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -23,6 +27,12 @@ const LoginPage = () => {
       navigate('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed');
+    }
+  };
+
+  const handleSwitchToRegister = () => {
+    if (onSwitchToRegister) {
+      onSwitchToRegister();
     }
   };
 
@@ -61,7 +71,12 @@ const LoginPage = () => {
         </Button>
       </form>
       <Box mt={2} textAlign="center">
-        <Link component={RouterLink} to="/register">
+        <Link 
+          component="button" 
+          variant="body2" 
+          onClick={handleSwitchToRegister}
+          sx={{ textDecoration: 'none', cursor: 'pointer' }}
+        >
           Don&apos;t have an account? Register
         </Link>
       </Box>

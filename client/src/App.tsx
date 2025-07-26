@@ -3,6 +3,7 @@ import { CssBaseline} from '@mui/material';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
+import AssignmentsPage from './pages/AssignmentsPage';
 import PrivateRoute from './components/PrivateRoute';
 import { useAuth } from './contexts/AuthContext';
 import NewAssignmentPage from './pages/NewAssignmentPage';
@@ -12,6 +13,7 @@ import SubmissionsPage from './pages/SubmissionsPage';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Footer from './components/Footer';
+import ProfilePage from './pages/ProfilePage';
 function App() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -46,10 +48,12 @@ function App() {
         {/* Protected routes */}
         <Route element={<PrivateRoute />}>
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/assignments" element={<AssignmentsPage />} />
           <Route path="/assignments/new" element={<NewAssignmentPage />} />
           <Route path="/assignments/:id" element={<AssignmentDetailsPage />} />
           <Route path="/assignments/:id/submissions" element={<SubmissionsPage />} />
           <Route path="/notifications" element={<NotificationCenterPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Route>
       </Routes>
     </>

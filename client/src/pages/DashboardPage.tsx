@@ -107,10 +107,9 @@ const DashboardPage = () => {
       fetchCounts();
     }, [token, assignments]);
 
-    // If you want to show real submission/graded/pending stats, fetch or compute them from backend or related data
+    // If you want to show real submission/pending stats, fetch or compute them from backend or related data
     // For now, use placeholders or just totalAssignments
     const totalSubmissions = 0; // Placeholder, update with real data if available
-    const totalGraded = 0; // Placeholder
     const totalPending = 0; // Placeholder
 
     // For the table
@@ -161,7 +160,7 @@ const DashboardPage = () => {
         </Dialog>
         {/* Stats Overview */}
         <Grid container spacing={3} mb={4}>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
               <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
                 <Avatar sx={{ bgcolor: blue[100], color: blue[700], mr: 2, width: 48, height: 48 }}>
@@ -174,7 +173,7 @@ const DashboardPage = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
               <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
                 <Avatar sx={{ bgcolor: green[100], color: green[700], mr: 2, width: 48, height: 48 }}>
@@ -187,20 +186,7 @@ const DashboardPage = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
-              <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
-                <Avatar sx={{ bgcolor: blue[50], color: blue[700], mr: 2, width: 48, height: 48 }}>
-                  <CheckCircleIcon sx={{ fontSize: 32 }} />
-                </Avatar>
-                <Box>
-                  <Typography variant="h5" fontWeight={700}>{totalGraded}</Typography>
-                  <Typography color="text.secondary" fontSize={15}>Graded</Typography>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
               <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
                 <Avatar sx={{ bgcolor: orange[100], color: orange[700], mr: 2, width: 48, height: 48 }}>

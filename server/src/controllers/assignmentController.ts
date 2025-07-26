@@ -106,7 +106,7 @@ export const createAssignment = async (req: Request, res: Response): Promise<voi
       return;
     }
 
-    const { title, description, dueDate, maxScore, instructions, attachments } = req.body;
+    const { title, description, dueDate, instructions, attachments } = req.body;
 
     // Validate due date
     if (new Date(dueDate) <= new Date()) {
@@ -124,7 +124,6 @@ export const createAssignment = async (req: Request, res: Response): Promise<voi
       title,
       description,
       dueDate,
-      maxScore,
       instructions,
       attachments: files.length > 0 ? files : attachments || [],
       createdBy: req.user.id
@@ -180,7 +179,7 @@ export const updateAssignment = async (req: Request, res: Response): Promise<voi
       return;
     }
 
-    const { title, description, dueDate, maxScore, instructions, attachments } = req.body;
+    const { title, description, dueDate, instructions, attachments } = req.body;
 
     // Validate due date if provided
     if (dueDate && new Date(dueDate) <= new Date()) {
@@ -197,7 +196,6 @@ export const updateAssignment = async (req: Request, res: Response): Promise<voi
         title,
         description,
         dueDate,
-        maxScore,
         instructions,
         attachments: attachments || assignment.attachments
       },

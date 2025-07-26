@@ -25,7 +25,7 @@ const AssignmentDetailsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(false);
-  const [editForm, setEditForm] = useState({ title: '', description: '', dueDate: '', maxScore: 100, instructions: '' });
+  const [editForm, setEditForm] = useState({ title: '', description: '', dueDate: '', instructions: '' });
   const [editLoading, setEditLoading] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -49,7 +49,6 @@ const AssignmentDetailsPage = () => {
           title: res.data.data.assignment.title,
           description: res.data.data.assignment.description,
           dueDate: res.data.data.assignment.dueDate?.slice(0, 16) || '',
-          maxScore: res.data.data.assignment.maxScore || 100,
           instructions: res.data.data.assignment.instructions || '',
         });
       } catch (err: any) {
@@ -140,9 +139,8 @@ const AssignmentDetailsPage = () => {
           <form onSubmit={handleEditSubmit}>
             <TextField label="Title" name="title" value={editForm.title} onChange={handleEditChange} fullWidth margin="normal" required />
             <TextField label="Description" name="description" value={editForm.description} onChange={handleEditChange} fullWidth margin="normal" required multiline minRows={2} />
-            <TextField label="Due Date" name="dueDate" type="datetime-local" value={editForm.dueDate} onChange={handleEditChange} fullWidth margin="normal" required InputLabelProps={{ shrink: true }} />
-            <TextField label="Max Score" name="maxScore" type="number" value={editForm.maxScore} onChange={handleEditChange} fullWidth margin="normal" inputProps={{ min: 0, max: 100 }} />
-            <TextField label="Instructions" name="instructions" value={editForm.instructions} onChange={handleEditChange} fullWidth margin="normal" multiline minRows={2} />
+            <TextField label="Instructions" name="instructions" multiline rows={4} value={editForm.instructions} onChange={handleEditChange} fullWidth margin="normal" />
+            <TextField label="Due Date" name="dueDate" type="datetime-local" value={editForm.dueDate} onChange={handleEditChange} fullWidth margin="normal" InputLabelProps={{ shrink: true }} />
             <Stack direction="row" spacing={2} mt={2}>
               <Button type="submit" variant="contained" color="primary" disabled={editLoading}>{editLoading ? <CircularProgress size={24} /> : 'Save'}</Button>
               <Button variant="outlined" onClick={() => setEditMode(false)}>Cancel</Button>
@@ -153,7 +151,6 @@ const AssignmentDetailsPage = () => {
             <Typography variant="h5">{assignment.title}</Typography>
             <Typography>Description: {assignment.description}</Typography>
             <Typography>Due: {new Date(assignment.dueDate).toLocaleString()}</Typography>
-            {assignment.maxScore && <Typography>Max Score: {assignment.maxScore}</Typography>}
             {assignment.instructions && <Typography>Instructions: {assignment.instructions}</Typography>}
             {assignment.createdBy && <Typography>Created by: {assignment.createdBy.name}</Typography>}
             <Typography>Status: {assignment.isActive ? 'Active' : 'Inactive'}</Typography>

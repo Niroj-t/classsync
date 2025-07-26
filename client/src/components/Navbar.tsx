@@ -1,18 +1,34 @@
 import { AppBar, Toolbar, Typography, Box, Button, IconButton, Dialog } from '@mui/material';
 import { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
 import CloseIcon from '@mui/icons-material/Close';
 import logo from '../assets/react.svg';
 
 interface NavbarProps {
-  user?: { name: string } | null;
+  user?: { name: string; role?: string } | null;
   onLogout?: () => void;
 }
 
 export default function Navbar({ user, onLogout }: NavbarProps) {
   const [openLogin, setOpenLogin] = useState(false);
   const [openRegister, setOpenRegister] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleSwitchToRegister = () => {
+    setOpenLogin(false);
+    setOpenRegister(true);
+  };
+
+  const handleSwitchToLogin = () => {
+    setOpenRegister(false);
+    setOpenLogin(true);
+  };
+
+  const showCreateAssignment =
+    user && user.role === 'teacher' && location.pathname === '/assignments';
 
   return (
     <AppBar position="static" color="default" elevation={2} sx={{ mb: 4 }}>
@@ -23,20 +39,25 @@ export default function Navbar({ user, onLogout }: NavbarProps) {
             ClassSync
           </Typography>
         </Box>
+        {showCreateAssignment && (
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{ mr: 2, fontWeight: 700 }}
+            onClick={() => navigate('/assignments/new')}
+          >
+            Create Assignment
+          </Button>
+        )}
         <Box>
           {user ? (
             <Button color="error" variant="outlined" onClick={onLogout}>
               Logout
             </Button>
           ) : (
-            <>
-              <Button color="primary" variant="outlined" sx={{ mr: 1 }} onClick={() => setOpenLogin(true)}>
-                Login
-              </Button>
-              <Button color="primary" variant="contained" onClick={() => setOpenRegister(true)}>
-                Sign Up
-              </Button>
-            </>
+            <Button color="primary" variant="outlined" sx={{ mr: 1 }} onClick={() => setOpenLogin(true)}>
+              Login
+            </Button>
           )}
         </Box>
       </Toolbar>
@@ -45,7 +66,7 @@ export default function Navbar({ user, onLogout }: NavbarProps) {
           <CloseIcon />
         </IconButton>
         <Box sx={{ p: 3, pt: 5 }}>
-          <LoginPage />
+          <LoginPage onSwitchToRegister={handleSwitchToRegister} />
         </Box>
       </Dialog>
       <Dialog open={openRegister} onClose={() => setOpenRegister(false)} maxWidth="xs" fullWidth>
@@ -53,7 +74,7 @@ export default function Navbar({ user, onLogout }: NavbarProps) {
           <CloseIcon />
         </IconButton>
         <Box sx={{ p: 3, pt: 5 }}>
-          <RegisterPage />
+          <RegisterPage onSwitchToLogin={handleSwitchToLogin} />
         </Box>
       </Dialog>
     </AppBar>

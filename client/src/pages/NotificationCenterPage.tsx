@@ -10,7 +10,7 @@ interface Notification {
   _id: string;
   title: string;
   message: string;
-  type: 'assignment' | 'deadline' | 'grade' | 'system';
+  type: 'assignment' | 'deadline' | 'system';
   read: boolean;
   relatedId?: string;
   relatedType?: 'assignment' | 'submission';
@@ -91,7 +91,7 @@ const NotificationCenterPage = () => {
                   primary={<>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <Typography fontWeight={n.read ? 'normal' : 'bold'}>{n.title}</Typography>
-                      <Chip size="small" label={n.type} color={n.type === 'grade' ? 'success' : n.type === 'deadline' ? 'warning' : n.type === 'assignment' ? 'primary' : 'default'} />
+                      <Chip size="small" label={n.type} color={n.type === 'deadline' ? 'warning' : n.type === 'assignment' ? 'primary' : 'default'} />
                       {!n.read && <Chip size="small" label="Unread" color="secondary" />}
                     </Stack>
                   </>}

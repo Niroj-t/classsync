@@ -1,267 +1,344 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  Box, 
-  Typography, 
-  Paper, 
-  CircularProgress, 
-  Alert, 
-  Button, 
-  TextField, 
-  Stack, 
-  Dialog, 
-  DialogTitle, 
-  DialogContent, 
-  DialogActions, 
-  List, 
-  ListItem, 
-  ListItemText,
-  Chip,
-  IconButton
+import {
+  Box, Typography, Card, CardContent, Grid, Avatar, Stack, Badge, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Chip, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Alert, CircularProgress
 } from '@mui/material';
+import { blue, orange, green, red } from '@mui/material/colors';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import LogoutIcon from '@mui/icons-material/Logout';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
-import GradeIcon from '@mui/icons-material/Grade';
-import DownloadIcon from '@mui/icons-material/Download';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { Link as RouterLink, useParams, useNavigate } from 'react-router-dom';
+import logo from '../assets/react.svg';
 
 interface Assignment {
   _id: string;
   title: string;
+  description: string;
   dueDate: string;
+  instructions?: string;
   maxScore?: number;
 }
 
 interface Submission {
   _id: string;
+  assignmentId: {
+    _id: string;
+    title: string;
+    dueDate: string;
+    maxScore?: number;
+    description?: string;
+  };
   studentId: {
     _id: string;
     name: string;
     email: string;
   };
-  assignmentId: Assignment;
   status: string;
-  score?: number;
   feedback?: string;
   submittedAt: string;
-  files?: string[];
-  text?: string;
 }
 
 const SubmissionsPage = () => {
-  const { id } = useParams<{ id: string }>();
-  const { token } = useAuth();
+  const { user, token, logout } = useAuth();
+  const { id } = useParams();
   const navigate = useNavigate();
-  const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [assignment, setAssignment] = useState<Assignment | null>(null);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [gradingDialog, setGradingDialog] = useState(false);
+  const [hasUnread, setHasUnread] = useState(true);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
-  const [gradeForm, setGradeForm] = useState({ score: '', feedback: '' });
-  const [gradingLoading, setGradingLoading] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchSubmissions = async () => {
+    const fetchData = async () => {
       setLoading(true);
-      setError(null);
       try {
-        const res = await axios.get(`/api/submissions/assignment/${id}`, {
+        // Fetch assignment details
+        const assignmentRes = await axios.get(`/api/assignments/${id}`, {
           baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
           headers: { Authorization: `Bearer ${token}` },
         });
-        setSubmissions(res.data.data.submissions || []);
-        setAssignment(res.data.data.assignment);
+        setAssignment(assignmentRes.data.data.assignment);
+
+        // Fetch submissions
+        const submissionsRes = await axios.get(`/api/submissions/assignment/${id}`, {
+          baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setSubmissions(submissionsRes.data.data.submissions || []);
       } catch (err: any) {
-        setError(err.response?.data?.message || 'Failed to fetch submissions');
+        setError(err.response?.data?.message || 'Failed to fetch data');
       } finally {
         setLoading(false);
       }
     };
-    if (token && id) fetchSubmissions();
+
+    if (token && id) {
+      fetchData();
+    }
   }, [token, id]);
 
-  const handleGradeClick = (submission: Submission) => {
+  const handleViewSubmission = (submission: Submission) => {
     setSelectedSubmission(submission);
-    setGradeForm({
-      score: submission.score?.toString() || '',
-      feedback: submission.feedback || ''
-    });
-    setGradingDialog(true);
+    setViewDialogOpen(true);
   };
 
-  const handleGradeSubmit = async () => {
-    if (!selectedSubmission) return;
-    
-    setGradingLoading(true);
-    try {
-      await axios.put(`/api/submissions/${selectedSubmission._id}/grade`, gradeForm, {
-        baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      
-      // Update the submission in the list
-      setSubmissions(prev => prev.map(sub => 
-        sub._id === selectedSubmission._id 
-          ? { ...sub, score: Number(gradeForm.score), feedback: gradeForm.feedback }
-          : sub
-      ));
-      
-      setGradingDialog(false);
-      setSelectedSubmission(null);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to grade submission');
-    } finally {
-      setGradingLoading(false);
-    }
+  const handleCloseViewDialog = () => {
+    setViewDialogOpen(false);
+    setSelectedSubmission(null);
   };
 
-  const downloadFile = (filePath: string, fileName: string) => {
-    const url = filePath.startsWith('http') 
-      ? filePath 
-      : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/${filePath.replace(/^\/+/, '')}`;
-    
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  if (!user) return null;
 
-  if (loading) return <CircularProgress />;
-  if (error) return <Alert severity="error">{error}</Alert>;
+  // --- User Avatar Helper ---
+  const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase();
+
+  // Calculate stats
+  const totalSubmissions = submissions.length;
+  const submittedCount = submissions.filter(s => s.status === 'submitted').length;
+  const lateCount = submissions.filter(s => s.status === 'late').length;
+  const now = new Date();
+  const dueDate = assignment ? new Date(assignment.dueDate) : null;
+  const isOverdue = dueDate && dueDate < now;
 
   return (
-    <Box>
-      <Stack direction="row" alignItems="center" spacing={2} mb={3}>
-        <IconButton onClick={() => navigate(-1)}>
-          <ArrowBackIcon />
-        </IconButton>
-        <Typography variant="h4">Student Submissions</Typography>
-      </Stack>
+    <Box sx={{ bgcolor: '#f7fafd', minHeight: '100vh', pb: 6 }}>
+      {/* Header */}
+      <Box sx={{ bgcolor: 'white', boxShadow: 1, borderRadius: 2, mb: 4, px: 3, py: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Avatar src={logo} sx={{ mr: 1, bgcolor: 'transparent', width: 40, height: 40 }} />
+          <Typography variant="h6" fontWeight={700} color="primary.main" sx={{ letterSpacing: 1 }}>
+            Class Sync
+          </Typography>
+          <Stack direction="row" spacing={2} sx={{ ml: 4 }}>
+            <Button component={RouterLink} to="/dashboard" color="inherit" sx={{ fontWeight: 500 }}>Dashboard</Button>
+            <Button component={RouterLink} to="/assignments" color="inherit" sx={{ fontWeight: 500 }}>Assignments</Button>
+            <Button component={RouterLink} to="/profile" color="inherit" sx={{ fontWeight: 500 }}>Profile</Button>
+          </Stack>
+        </Box>
+        <Stack direction="row" spacing={2} alignItems="center">
+          <Badge color="error" variant="dot" invisible={!hasUnread} sx={{ mr: 1 }}>
+            <IconButton color="primary" onClick={() => setHasUnread(false)}>
+              <NotificationsIcon />
+            </IconButton>
+          </Badge>
+          <Avatar sx={{ bgcolor: blue[500], width: 36, height: 36, fontWeight: 700 }}>{getInitials(user.name)}</Avatar>
+          <Typography fontWeight={600}>{user.name}</Typography>
+          <IconButton
+            color="error"
+            onClick={() => {
+              logout();
+              navigate('/');
+            }}
+            title="Logout"
+          >
+            <LogoutIcon />
+          </IconButton>
+        </Stack>
+      </Box>
 
+      {/* Assignment Info */}
       {assignment && (
-        <Paper sx={{ p: 2, mb: 3 }}>
-          <Typography variant="h6">{assignment.title}</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Due: {new Date(assignment.dueDate).toLocaleString()}
-            {assignment.maxScore && ` | Max Score: ${assignment.maxScore}`}
-          </Typography>
-        </Paper>
-      )}
-
-      {submissions.length === 0 ? (
-        <Paper sx={{ p: 3, textAlign: 'center' }}>
-          <Typography variant="h6" color="text.secondary">
-            No submissions yet
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Students haven't submitted any work for this assignment.
-          </Typography>
-        </Paper>
-      ) : (
-        <List>
-          {submissions.map((submission) => (
-            <Paper key={submission._id} sx={{ mb: 2 }}>
-              <ListItem>
-                <ListItemText
-                  primary={
-                    <Stack direction="row" alignItems="center" spacing={1}>
-                      <Typography variant="h6">
-                        {submission.studentId.name}
-                      </Typography>
-                      <Chip 
-                        label={submission.status} 
-                        color={submission.status === 'submitted' ? 'primary' : 'default'}
-                        size="small"
-                      />
-                      {submission.score !== undefined && (
-                        <Chip 
-                          label={`${submission.score}${assignment?.maxScore ? '/' + assignment.maxScore : ''}`}
-                          color="success"
-                          size="small"
-                        />
-                      )}
-                    </Stack>
-                  }
-                  secondary={
-                    <Box>
-                      <Typography variant="body2">
-                        Submitted: {new Date(submission.submittedAt).toLocaleString()}
-                      </Typography>
-                      {submission.text && (
-                        <Typography variant="body2" sx={{ mt: 1 }}>
-                          <strong>Text:</strong> {submission.text}
-                        </Typography>
-                      )}
-                      {submission.feedback && (
-                        <Typography variant="body2" sx={{ mt: 1 }}>
-                          <strong>Feedback:</strong> {submission.feedback}
-                        </Typography>
-                      )}
-                    </Box>
-                  }
+        <Card sx={{ mb: 4, borderRadius: 3, boxShadow: 2 }}>
+          <CardContent>
+            <Typography variant="h5" fontWeight={700} gutterBottom>
+              {assignment.title}
+            </Typography>
+            <Typography color="text.secondary" paragraph>
+              {assignment.description}
+            </Typography>
+            <Stack direction="row" spacing={2} alignItems="center">
+              <Chip 
+                icon={<AccessTimeIcon />} 
+                label={`Due: ${new Date(assignment.dueDate).toLocaleDateString()}`}
+                color={isOverdue ? 'error' : 'primary'}
+                variant="outlined"
+              />
+              {assignment.maxScore && (
+                <Chip 
+                  label={`Max Score: ${assignment.maxScore}`}
+                  variant="outlined"
                 />
-                <Stack direction="row" spacing={1}>
-                  {submission.files && submission.files.length > 0 && (
-                    <IconButton
-                      onClick={() => downloadFile(submission.files![0], `submission_${submission.studentId.name}.pdf`)}
-                      title="Download submission file"
-                    >
-                      <DownloadIcon />
-                    </IconButton>
-                  )}
-                  <Button
-                    variant="outlined"
-                    startIcon={<GradeIcon />}
-                    onClick={() => handleGradeClick(submission)}
-                  >
-                    {submission.score !== undefined ? 'Update Grade' : 'Grade'}
-                  </Button>
-                </Stack>
-              </ListItem>
-            </Paper>
-          ))}
-        </List>
+              )}
+            </Stack>
+          </CardContent>
+        </Card>
       )}
 
-      <Dialog open={gradingDialog} onClose={() => setGradingDialog(false)} maxWidth="sm" fullWidth>
+      {/* Stats Overview */}
+      <Grid container spacing={3} mb={4}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
+            <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
+              <Avatar sx={{ bgcolor: blue[100], color: blue[700], mr: 2, width: 48, height: 48 }}>
+                <AssignmentIcon sx={{ fontSize: 32 }} />
+              </Avatar>
+              <Box>
+                <Typography variant="h5" fontWeight={700}>{totalSubmissions}</Typography>
+                <Typography color="text.secondary" fontSize={15}>Total Submissions</Typography>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
+            <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
+              <Avatar sx={{ bgcolor: green[100], color: green[700], mr: 2, width: 48, height: 48 }}>
+                <CheckCircleIcon sx={{ fontSize: 32 }} />
+              </Avatar>
+              <Box>
+                <Typography variant="h5" fontWeight={700}>{submittedCount}</Typography>
+                <Typography color="text.secondary" fontSize={15}>Submitted</Typography>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
+            <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
+              <Avatar sx={{ bgcolor: orange[100], color: orange[700], mr: 2, width: 48, height: 48 }}>
+                <WarningAmberIcon sx={{ fontSize: 32 }} />
+              </Avatar>
+              <Box>
+                <Typography variant="h5" fontWeight={700}>{lateCount}</Typography>
+                <Typography color="text.secondary" fontSize={15}>Late</Typography>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
+            <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
+              <Avatar sx={{ bgcolor: red[100], color: red[700], mr: 2, width: 48, height: 48 }}>
+                <WarningAmberIcon sx={{ fontSize: 32 }} />
+              </Avatar>
+              <Box>
+                <Typography variant="h5" fontWeight={700}>{totalSubmissions - submittedCount - lateCount}</Typography>
+                <Typography color="text.secondary" fontSize={15}>Pending</Typography>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Submissions Table */}
+      <Box>
+        <Typography variant="h6" fontWeight={700} mb={2}>Submissions</Typography>
+        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        <TableContainer component={Paper} sx={{ borderRadius: 3, boxShadow: 1 }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 700 }}>Student</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Submitted</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Action</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {submissions.map((submission) => {
+                const submittedDate = new Date(submission.submittedAt);
+                const dueDate = new Date(submission.assignmentId.dueDate);
+                const isLate = submittedDate > dueDate;
+                
+                let status = 'Submitted';
+                let color = green[700] as string;
+                let bg = green[100] as string;
+                
+                if (isLate) {
+                  status = 'Late';
+                  color = orange[700] as string;
+                  bg = orange[100] as string;
+                }
+
+                return (
+                  <TableRow key={submission._id}>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Avatar sx={{ mr: 2, bgcolor: blue[500], width: 32, height: 32, fontSize: 14 }}>
+                          {getInitials(submission.studentId.name)}
+                        </Avatar>
+                        <Box>
+                          <Typography fontWeight={600}>{submission.studentId.name}</Typography>
+                          <Typography fontSize={13} color="text.secondary">{submission.studentId.email}</Typography>
+                        </Box>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">
+                        {submittedDate.toLocaleDateString()}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {submittedDate.toLocaleTimeString()}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={status} 
+                        size="small" 
+                        sx={{ fontWeight: 600, bgcolor: bg, color: color }} 
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<VisibilityIcon />}
+                        onClick={() => handleViewSubmission(submission)}
+                        sx={{ textTransform: 'none', fontWeight: 500 }}
+                      >
+                        View
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        {submissions.length === 0 && !loading && (
+          <Paper sx={{ p: 4, textAlign: 'center', mt: 2 }}>
+            <Typography variant="h6" color="text.secondary" gutterBottom>
+              No submissions yet
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Students will appear here once they submit their assignments.
+            </Typography>
+          </Paper>
+        )}
+      </Box>
+
+      {/* View Submission Dialog */}
+      <Dialog open={viewDialogOpen} onClose={handleCloseViewDialog} maxWidth="md" fullWidth>
         <DialogTitle>
-          Grade Submission - {selectedSubmission?.studentId.name}
+          Submission Details - {selectedSubmission?.studentId.name}
         </DialogTitle>
         <DialogContent>
-          <TextField
-            label="Score"
-            type="number"
-            value={gradeForm.score}
-            onChange={(e) => setGradeForm({ ...gradeForm, score: e.target.value })}
-            fullWidth
-            margin="normal"
-            inputProps={{ 
-              min: 0, 
-              max: assignment?.maxScore || 100 
-            }}
-          />
-          <TextField
-            label="Feedback"
-            value={gradeForm.feedback}
-            onChange={(e) => setGradeForm({ ...gradeForm, feedback: e.target.value })}
-            fullWidth
-            margin="normal"
-            multiline
-            minRows={3}
-          />
+          {selectedSubmission && (
+            <Box>
+              <Typography variant="h6" gutterBottom>Student Information</Typography>
+              <Typography><strong>Name:</strong> {selectedSubmission.studentId.name}</Typography>
+              <Typography><strong>Email:</strong> {selectedSubmission.studentId.email}</Typography>
+              <Typography><strong>Submitted:</strong> {new Date(selectedSubmission.submittedAt).toLocaleString()}</Typography>
+              
+              {selectedSubmission.feedback && (
+                <>
+                  <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>Feedback</Typography>
+                  <Typography>{selectedSubmission.feedback}</Typography>
+                </>
+              )}
+            </Box>
+          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setGradingDialog(false)}>Cancel</Button>
-          <Button 
-            onClick={handleGradeSubmit} 
-            variant="contained"
-            disabled={gradingLoading}
-          >
-            {gradingLoading ? <CircularProgress size={24} /> : 'Save Grade'}
-          </Button>
+          <Button onClick={handleCloseViewDialog}>Close</Button>
         </DialogActions>
       </Dialog>
     </Box>

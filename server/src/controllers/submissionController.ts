@@ -36,7 +36,6 @@ export const getSubmissionsByAssignment = async (req: Request, res: Response): P
 
     const submissions = await Submission.find(query)
       .populate('studentId', 'name email')
-      .populate('gradedBy', 'name email')
       .sort({ submittedAt: -1 })
       .skip(skip)
       .limit(Number(limit));
@@ -78,8 +77,7 @@ export const getMySubmissions = async (req: Request, res: Response): Promise<voi
     const skip = (Number(page) - 1) * Number(limit);
 
     const submissions = await Submission.find({ studentId: req.user.id })
-      .populate('assignmentId', 'title dueDate maxScore')
-      .populate('gradedBy', 'name email')
+      .populate('assignmentId', 'title dueDate')
       .sort({ submittedAt: -1 })
       .skip(skip)
       .limit(Number(limit));
@@ -163,11 +161,7 @@ export const submitAssignment = async (req: Request, res: Response): Promise<voi
       assignmentId,
       studentId: req.user.id,
       files,
-      history: [{
-        action: 'Submitted',
-        timestamp: new Date(), // Fix: Add timestamp
-        details: 'Initial submission'
-      }]
+      submittedAt: new Date()
     });
 
     const populatedSubmission = await Submission.findById(submission._id)
@@ -240,11 +234,6 @@ export const updateSubmission = async (req: Request, res: Response): Promise<voi
 
     submission.files = files;
     submission.submittedAt = new Date();
-    submission.history.push({
-      action: 'Updated',
-      timestamp: new Date(), // Fix: Add timestamp
-      details: 'Submission updated'
-    });
 
     await submission.save();
 
@@ -259,84 +248,6 @@ export const updateSubmission = async (req: Request, res: Response): Promise<voi
     });
   } catch (error) {
     console.error('Update submission error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error'
-    });
-  }
-};
-
-// @desc    Grade submission
-// @route   PUT /api/submissions/:id/grade
-// @access  Private (Teachers only)
-export const gradeSubmission = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      res.status(400).json({
-        success: false,
-        errors: errors.array()
-      });
-      return;
-    }
-
-    const submission = await Submission.findById(req.params.id)
-      .populate('assignmentId', 'createdBy maxScore');
-
-    if (!submission) {
-      res.status(404).json({
-        success: false,
-        message: 'Submission not found'
-      });
-      return;
-    }
-
-    // Check if teacher owns the assignment - Fix: Cast to any to access populated fields
-    const assignment = submission.assignmentId as any;
-    if (assignment.createdBy.toString() !== req.user.id) {
-      res.status(403).json({
-        success: false,
-        message: 'Access denied. You can only grade submissions for your assignments.'
-      });
-      return;
-    }
-
-    const { score, feedback } = req.body;
-
-    // Validate score - Fix: Cast to any to access populated fields
-    if (score && (score < 0 || score > assignment.maxScore)) {
-      res.status(400).json({
-        success: false,
-        message: `Score must be between 0 and ${assignment.maxScore}`
-      });
-      return;
-    }
-
-    submission.score = score;
-    submission.feedback = feedback;
-    submission.status = 'graded';
-    submission.gradedBy = req.user.id;
-    submission.gradedAt = new Date();
-    submission.history.push({
-      action: 'Graded',
-      timestamp: new Date(), // Fix: Add timestamp
-      details: `Graded with score: ${score}`
-    });
-
-    await submission.save();
-
-    const gradedSubmission = await Submission.findById(submission._id)
-      .populate('assignmentId', 'title maxScore')
-      .populate('studentId', 'name email')
-      .populate('gradedBy', 'name email');
-
-    res.json({
-      success: true,
-      message: 'Submission graded successfully',
-      data: { submission: gradedSubmission }
-    });
-  } catch (error) {
-    console.error('Grade submission error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error'

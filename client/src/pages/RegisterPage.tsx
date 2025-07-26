@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { Box, Typography, TextField, Button, Alert, CircularProgress, MenuItem, Link } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate, Link as RouterLink, Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 
-const RegisterPage = () => {
+interface RegisterPageProps {
+  onSwitchToLogin?: () => void;
+}
+
+const RegisterPage = ({ onSwitchToLogin }: RegisterPageProps) => {
   const { register, loading, user } = useAuth();
-  const navigate = useNavigate();
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -31,9 +34,19 @@ const RegisterPage = () => {
     try {
       await register({ ...form, role: form.role as 'student' | 'teacher' });
       setSuccess('Registration successful! Please log in.');
-      setTimeout(() => navigate('/login'), 1500);
+      setTimeout(() => {
+        if (onSwitchToLogin) {
+          onSwitchToLogin();
+        }
+      }, 1500);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed');
+    }
+  };
+
+  const handleSwitchToLogin = () => {
+    if (onSwitchToLogin) {
+      onSwitchToLogin();
     }
   };
 
@@ -96,7 +109,12 @@ const RegisterPage = () => {
         </Button>
       </form>
       <Box mt={2} textAlign="center">
-        <Link component={RouterLink} to="/login">
+        <Link 
+          component="button" 
+          variant="body2" 
+          onClick={handleSwitchToLogin}
+          sx={{ textDecoration: 'none', cursor: 'pointer' }}
+        >
           Already have an account? Login
         </Link>
       </Box>

@@ -227,37 +227,23 @@ const AssignmentsPage = () => {
             >
               Refresh
             </Button>
-            <Button 
-              variant="contained" 
-              color="primary"
-              onClick={() => navigate('/assignments/new')}
-              sx={{
-                fontWeight: 700,
-                backgroundColor: 'primary.main',
-                '&:hover': {
-                  backgroundColor: 'primary.dark',
-                  boxShadow: 2,
-                },
-              }}
-            >
-              Create Assignment
-            </Button>
           </Stack>
         </Stack>
-        <TextField
-          fullWidth
-          placeholder="Search assignments..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
-          sx={{ mb: 2 }}
-        />
+        <Box sx={{ maxWidth: 250, mx: 'auto' }}>
+          <TextField
+            placeholder="Search assignments..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+            sx={{ mb: 2, width: '100%' }}
+          />
+        </Box>
       </Box>
 
       {/* Assignments Table */}
