@@ -9,9 +9,10 @@ import DeleteIcon from '@mui/icons-material/Delete';
 interface NewAssignmentPageProps {
   inDialog?: boolean;
   onClose?: () => void;
+  onAssignmentCreated?: () => void;
 }
 
-const NewAssignmentPage = ({ inDialog = false, onClose }: NewAssignmentPageProps) => {
+const NewAssignmentPage = ({ inDialog = false, onClose, onAssignmentCreated }: NewAssignmentPageProps) => {
   const { token, user } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({
@@ -59,6 +60,7 @@ const NewAssignmentPage = ({ inDialog = false, onClose }: NewAssignmentPageProps
       });
       setSuccess('Assignment created successfully!');
       setTimeout(() => {
+        if (onAssignmentCreated) onAssignmentCreated();
         if (onClose) onClose();
         else navigate('/dashboard');
       }, 1200);

@@ -49,18 +49,19 @@ const DashboardPage = () => {
   const [hasUnread, setHasUnread] = useState(true);
   const [openCreate, setOpenCreate] = useState(false);
 
+  const fetchAssignments = async () => {
+    try {
+      const res = await axios.get('/api/assignments', {
+        baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setAssignments(res.data.data.assignments || []);
+    } catch {
+      setAssignments([]);
+    }
+  };
+
   useEffect(() => {
-    const fetchAssignments = async () => {
-      try {
-        const res = await axios.get('/api/assignments', {
-          baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setAssignments(res.data.data.assignments || []);
-      } catch {
-        setAssignments([]);
-      }
-    };
     if (token) fetchAssignments();
   }, [token]);
 
@@ -152,7 +153,11 @@ const DashboardPage = () => {
           </Stack>
         </Box>
         <Dialog open={openCreate} onClose={() => setOpenCreate(false)} maxWidth="md" fullWidth>
-          <NewAssignmentPage inDialog onClose={() => setOpenCreate(false)} />
+          <NewAssignmentPage 
+            inDialog 
+            onClose={() => setOpenCreate(false)} 
+            onAssignmentCreated={fetchAssignments}
+          />
         </Dialog>
         {/* Stats Overview */}
         <Grid container spacing={3} mb={4}>
@@ -272,7 +277,7 @@ const DashboardPage = () => {
 
   // --- Summary Card Calculations (real data) ---
   const totalAssignments = assignments.length;
-  const submittedIds = new Set(submissions.map(s => s.assignmentId._id));
+  const submittedIds = new Set(submissions.map(s => s.assignmentId?._id).filter(Boolean));
   const now = new Date();
   const pendingAssignments = assignments.filter(a => {
     const due = new Date(a.dueDate);
