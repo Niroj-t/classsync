@@ -3,11 +3,17 @@ import { Box, Typography, TextField, Button, Alert, Dialog, DialogTitle, DialogC
 import CloseIcon from '@mui/icons-material/Close';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
+<<<<<<< HEAD
 import { useNavigate } from 'react-router-dom';
 
 const ProfilePage = () => {
   const { token, user } = useAuth();
   const navigate = useNavigate();
+=======
+
+const ProfilePage = () => {
+  const { token, user } = useAuth();
+>>>>>>> a85ce94f8c53a7281e97162b415297d808b7c473
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -37,6 +43,7 @@ const ProfilePage = () => {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
+<<<<<<< HEAD
       // Redirect admin to dashboard after successful password change
       if (user?.role === 'admin') {
         navigate('/admin/dashboard', { replace: true });
@@ -46,6 +53,12 @@ const ProfilePage = () => {
       setTimeout(() => {
         setOpen(false);
       }, 1500);
+=======
+      // Close modal after successful password change
+      setTimeout(() => {
+        setOpen(false);
+      }, 2000);
+>>>>>>> a85ce94f8c53a7281e97162b415297d808b7c473
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to change password');
     } finally {

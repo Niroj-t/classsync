@@ -111,7 +111,11 @@ interface AdminContextType {
     page?: number;
     limit?: number;
     status?: string;
+<<<<<<< HEAD
   }) => Promise<{ pagination?: { current: number; pages: number; total: number; limit: number } } | void>;
+=======
+  }) => Promise<void>;
+>>>>>>> a85ce94f8c53a7281e97162b415297d808b7c473
   
   // Utility functions
   clearError: () => void;
@@ -294,7 +298,10 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
         { headers: getAuthHeaders() }
       );
       setSubmissions(response.data.data.submissions);
+<<<<<<< HEAD
       return { pagination: response.data.data.pagination };
+=======
+>>>>>>> a85ce94f8c53a7281e97162b415297d808b7c473
     } catch (error) {
       handleError(error);
     } finally {
