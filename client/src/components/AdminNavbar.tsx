@@ -3,14 +3,13 @@ import {
   AppBar,
   Toolbar,
   Typography,
-  Button,
   Box,
   IconButton,
   Menu,
   MenuItem,
   Drawer,
   List,
-  ListItem,
+  ListItemButton,
   ListItemIcon,
   ListItemText,
   Divider,
@@ -23,7 +22,6 @@ import {
   People,
   Assignment,
   TrendingUp,
-  AdminPanelSettings,
   Logout,
   AccountCircle,
   Settings
@@ -82,8 +80,7 @@ const AdminNavbar: React.FC<AdminNavbarProps> = ({ onLogout }) => {
       <Divider />
       <List>
         {adminMenuItems.map((item) => (
-          <ListItem
-            button
+          <ListItemButton
             key={item.label}
             onClick={() => {
               navigate(item.path);
@@ -102,7 +99,7 @@ const AdminNavbar: React.FC<AdminNavbarProps> = ({ onLogout }) => {
           >
             <ListItemIcon>{item.icon}</ListItemIcon>
             <ListItemText primary={item.label} />
-          </ListItem>
+          </ListItemButton>
         ))}
       </List>
     </Box>

@@ -21,18 +21,7 @@ import {
   IconButton,
   Tooltip
 } from '@mui/material';
-<<<<<<< HEAD
 import { Search, FilterList, Refresh } from '@mui/icons-material';
-=======
-import {
-  Search,
-  FilterList,
-  Refresh,
-  Assignment,
-  Person,
-  Grade
-} from '@mui/icons-material';
->>>>>>> a85ce94f8c53a7281e97162b415297d808b7c473
 import { useAdmin } from '../contexts/AdminContext';
 
 const AdminSubmissionsPage: React.FC = () => {
@@ -57,23 +46,17 @@ const AdminSubmissionsPage: React.FC = () => {
     if (search) params.search = search;
     if (statusFilter) params.status = statusFilter;
 
-<<<<<<< HEAD
     const result = await fetchSubmissions(params);
     if (result?.pagination) {
       setTotalPages(result.pagination.pages || 1);
     }
-=======
-    await fetchSubmissions(params);
->>>>>>> a85ce94f8c53a7281e97162b415297d808b7c473
   };
 
   useEffect(() => {
     fetchSubmissionsData();
   }, [page, search, statusFilter]);
 
-<<<<<<< HEAD
   // Grading removed from admin submissions view
-
   const getSubmissionStatus = (submission: any) => {
     const dueDateValue = submission?.assignment?.dueDate;
     if (!dueDateValue) {
@@ -85,33 +68,6 @@ const AdminSubmissionsPage: React.FC = () => {
     return isLate
       ? <Chip label="Late" color="error" size="small" />
       : <Chip label="On Time" color="success" size="small" />;
-=======
-  const getGradeChip = (submission: any) => {
-    if (submission.grade !== undefined && submission.grade !== null) {
-      const grade = submission.grade;
-      let color: 'success' | 'warning' | 'error' | 'default' = 'default';
-      
-      if (grade >= 90) color = 'success';
-      else if (grade >= 70) color = 'warning';
-      else if (grade >= 0) color = 'error';
-      
-      return <Chip label={`${grade}%`} color={color} size="small" />;
-    } else {
-      return <Chip label="Ungraded" color="default" size="small" />;
-    }
-  };
-
-  const getSubmissionStatus = (submission: any) => {
-    const dueDate = new Date(submission.assignment.dueDate);
-    const submittedAt = new Date(submission.submittedAt);
-    const isLate = submittedAt > dueDate;
-    
-    if (isLate) {
-      return <Chip label="Late" color="error" size="small" />;
-    } else {
-      return <Chip label="On Time" color="success" size="small" />;
-    }
->>>>>>> a85ce94f8c53a7281e97162b415297d808b7c473
   };
 
   return (
@@ -154,13 +110,8 @@ const AdminSubmissionsPage: React.FC = () => {
               label="Status"
             >
               <MenuItem value="">All Status</MenuItem>
-<<<<<<< HEAD
               <MenuItem value="submitted">Submitted</MenuItem>
               <MenuItem value="late">Late</MenuItem>
-=======
-              <MenuItem value="graded">Graded</MenuItem>
-              <MenuItem value="ungraded">Ungraded</MenuItem>
->>>>>>> a85ce94f8c53a7281e97162b415297d808b7c473
             </Select>
           </FormControl>
         </Box>
@@ -176,31 +127,18 @@ const AdminSubmissionsPage: React.FC = () => {
               <TableCell>Submitted</TableCell>
               <TableCell>Due Date</TableCell>
               <TableCell>Status</TableCell>
-<<<<<<< HEAD
-              {/* Grade column removed */}
-=======
-              <TableCell>Grade</TableCell>
->>>>>>> a85ce94f8c53a7281e97162b415297d808b7c473
             </TableRow>
           </TableHead>
           <TableBody>
             {loading ? (
               <TableRow>
-<<<<<<< HEAD
                 <TableCell colSpan={5} align="center">
-=======
-                <TableCell colSpan={6} align="center">
->>>>>>> a85ce94f8c53a7281e97162b415297d808b7c473
                   <CircularProgress />
                 </TableCell>
               </TableRow>
             ) : submissions.length === 0 ? (
               <TableRow>
-<<<<<<< HEAD
                 <TableCell colSpan={5} align="center">
-=======
-                <TableCell colSpan={6} align="center">
->>>>>>> a85ce94f8c53a7281e97162b415297d808b7c473
                   <Typography color="textSecondary">No submissions found</Typography>
                 </TableCell>
               </TableRow>
@@ -209,27 +147,16 @@ const AdminSubmissionsPage: React.FC = () => {
                 <TableRow key={submission._id}>
                   <TableCell>
                     <Typography variant="body2" fontWeight="medium">
-<<<<<<< HEAD
                       {submission.assignment?.title || '—'}
-=======
-                      {submission.assignment.title}
->>>>>>> a85ce94f8c53a7281e97162b415297d808b7c473
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Box>
                       <Typography variant="body2" fontWeight="medium">
-<<<<<<< HEAD
                         {submission.submittedBy?.name || '—'}
                       </Typography>
                       <Typography variant="caption" color="textSecondary">
                         {submission.submittedBy?.email || ''}
-=======
-                        {submission.submittedBy.name}
-                      </Typography>
-                      <Typography variant="caption" color="textSecondary">
-                        {submission.submittedBy.email}
->>>>>>> a85ce94f8c53a7281e97162b415297d808b7c473
                       </Typography>
                     </Box>
                   </TableCell>
@@ -243,22 +170,12 @@ const AdminSubmissionsPage: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2">
-<<<<<<< HEAD
                       {submission.assignment?.dueDate ? new Date(submission.assignment.dueDate).toLocaleDateString() : '—'}
-=======
-                      {new Date(submission.assignment.dueDate).toLocaleDateString()}
->>>>>>> a85ce94f8c53a7281e97162b415297d808b7c473
                     </Typography>
                   </TableCell>
                   <TableCell>
                     {getSubmissionStatus(submission)}
                   </TableCell>
-<<<<<<< HEAD
-=======
-                  <TableCell>
-                    {getGradeChip(submission)}
-                  </TableCell>
->>>>>>> a85ce94f8c53a7281e97162b415297d808b7c473
                 </TableRow>
               ))
             )}

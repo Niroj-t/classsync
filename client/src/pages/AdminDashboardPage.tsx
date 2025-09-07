@@ -6,20 +6,13 @@ import {
   CardContent,
   Typography,
   Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Chip,
+  CircularProgress,
   IconButton,
-  Alert,
-  CircularProgress
+  Alert
 } from '@mui/material';
 import {
   People,
-  Assignment,
+  Assignment as AssignmentIcon,
   School,
   TrendingUp,
   Refresh,
@@ -94,7 +87,7 @@ const AdminDashboardPage: React.FC = () => {
         </Alert>
       )}
 
-      {/* Statistics Cards */}
+      {/* Top Statistics Cards */}
       <Grid container spacing={3} mb={4}>
         {/* User Statistics */}
         <Grid item xs={12} sm={6} md={3}>
@@ -119,7 +112,7 @@ const AdminDashboardPage: React.FC = () => {
           <StatCard
             title="Teachers"
             value={stats?.users.teachers || 0}
-            icon={<Assignment fontSize="large" />}
+            icon={<AssignmentIcon fontSize="large" />}
             color="warning.main"
             subtitle={`${stats?.users.recent || 0} new (7d)`}
           />
@@ -138,7 +131,7 @@ const AdminDashboardPage: React.FC = () => {
           <StatCard
             title="Assignments"
             value={stats?.assignments.total || 0}
-            icon={<Assignment fontSize="large" />}
+            icon={<AssignmentIcon fontSize="large" />}
             color="info.main"
             subtitle={`${stats?.assignments.active || 0} active`}
           />
@@ -156,7 +149,7 @@ const AdminDashboardPage: React.FC = () => {
           <StatCard
             title="Overdue"
             value={stats?.assignments.overdue || 0}
-            icon={<Assignment fontSize="large" />}
+            icon={<AssignmentIcon fontSize="large" />}
             color="error.main"
             subtitle="assignments"
           />
@@ -171,20 +164,14 @@ const AdminDashboardPage: React.FC = () => {
         </Grid>
       </Grid>
 
-      {/* Detailed Statistics Tables */}
+      {/* System Overview (cards) */}
       <Grid container spacing={3}>
-<<<<<<< HEAD
-        {/* System Overview (cards) */}
-=======
-        {/* System Overview */}
->>>>>>> a85ce94f8c53a7281e97162b415297d808b7c473
         <Grid item xs={12} md={6}>
           <Paper>
             <Box p={2}>
               <Typography variant="h6" gutterBottom>
                 System Overview
               </Typography>
-<<<<<<< HEAD
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
                   <Card variant="outlined" sx={{ borderLeft: '4px solid', borderLeftColor: 'success.main' }}>
@@ -235,90 +222,17 @@ const AdminDashboardPage: React.FC = () => {
                   </Card>
                 </Grid>
               </Grid>
-=======
-              <TableContainer>
-                <Table>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell>Active Users</TableCell>
-                      <TableCell align="right">
-                        <Chip 
-                          label={stats?.users.active || 0} 
-                          color="success" 
-                          size="small"
-                        />
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Recent Users (7 days)</TableCell>
-                      <TableCell align="right">
-                        <Chip 
-                          label={stats?.users.recent || 0} 
-                          color="primary" 
-                          size="small"
-                        />
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Active Assignments</TableCell>
-                      <TableCell align="right">
-                        <Chip 
-                          label={stats?.assignments.active || 0} 
-                          color="info" 
-                          size="small"
-                        />
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Recent Assignments (7 days)</TableCell>
-                      <TableCell align="right">
-                        <Chip 
-                          label={stats?.assignments.recent || 0} 
-                          color="success" 
-                          size="small"
-                        />
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Recent Submissions (7 days)</TableCell>
-                      <TableCell align="right">
-                        <Chip 
-                          label={stats?.submissions.recent || 0} 
-                          color="warning" 
-                          size="small"
-                        />
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Total Notifications</TableCell>
-                      <TableCell align="right">
-                        <Chip 
-                          label={stats?.notifications.total || 0} 
-                          color="default" 
-                          size="small"
-                        />
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </TableContainer>
->>>>>>> a85ce94f8c53a7281e97162b415297d808b7c473
             </Box>
           </Paper>
         </Grid>
 
-<<<<<<< HEAD
         {/* User Activity (cards to match System Overview) */}
-=======
-        {/* User Activity */}
->>>>>>> a85ce94f8c53a7281e97162b415297d808b7c473
         <Grid item xs={12} md={6}>
           <Paper>
             <Box p={2}>
               <Typography variant="h6" gutterBottom>
                 User Activity
               </Typography>
-<<<<<<< HEAD
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
                   <Card variant="outlined" sx={{ borderLeft: '4px solid', borderLeftColor: 'success.main' }}>
@@ -361,111 +275,9 @@ const AdminDashboardPage: React.FC = () => {
                   </Card>
                 </Grid>
               </Grid>
-=======
-              <TableContainer>
-                <Table>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell>Students</TableCell>
-                      <TableCell align="right">
-                        <Chip 
-                          label={stats?.users.students || 0} 
-                          color="success" 
-                          size="small"
-                        />
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Teachers</TableCell>
-                      <TableCell align="right">
-                        <Chip 
-                          label={stats?.users.teachers || 0} 
-                          color="warning" 
-                          size="small"
-                        />
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Admins</TableCell>
-                      <TableCell align="right">
-                        <Chip 
-                          label={stats?.users.admins || 0} 
-                          color="error" 
-                          size="small"
-                        />
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Active Last 30 Days</TableCell>
-                      <TableCell align="right">
-                        <Chip 
-                          label={stats?.users.activeLast30Days || 0} 
-                          color="info" 
-                          size="small"
-                        />
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Inactive Users</TableCell>
-                      <TableCell align="right">
-                        <Chip 
-                          label={(stats?.users.total || 0) - (stats?.users.active || 0)} 
-                          color="default" 
-                          size="small"
-                        />
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </TableContainer>
->>>>>>> a85ce94f8c53a7281e97162b415297d808b7c473
             </Box>
           </Paper>
         </Grid>
-
-<<<<<<< HEAD
-        
-=======
-        {/* Quick Actions */}
-        <Grid item xs={12}>
-          <Paper>
-            <Box p={2}>
-              <Typography variant="h6" gutterBottom>
-                Quick Actions
-              </Typography>
-              <Typography variant="body2" color="textSecondary" paragraph>
-                Use the navigation menu to access detailed management features:
-              </Typography>
-              <Box display="flex" gap={2} flexWrap="wrap">
-                <Chip 
-                  label="User Management" 
-                  color="primary" 
-                  variant="outlined"
-                  icon={<People />}
-                />
-                <Chip 
-                  label="Assignment Overview" 
-                  color="secondary" 
-                  variant="outlined"
-                  icon={<Assignment />}
-                />
-                <Chip 
-                  label="Submission Tracking" 
-                  color="info" 
-                  variant="outlined"
-                  icon={<TrendingUp />}
-                />
-                <Chip 
-                  label="System Logs" 
-                  color="default" 
-                  variant="outlined"
-                  icon={<AdminPanelSettings />}
-                />
-              </Box>
-            </Box>
-          </Paper>
-        </Grid>
->>>>>>> a85ce94f8c53a7281e97162b415297d808b7c473
       </Grid>
     </Box>
   );

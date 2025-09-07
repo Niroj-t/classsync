@@ -15,10 +15,7 @@ import assignmentRoutes from './routes/assignments';
 import submissionRoutes from './routes/submissions';
 import notificationRoutes from './routes/notifications';
 import adminRoutes from './routes/admin';
-<<<<<<< HEAD
 import userRoutes from './routes/users';
-=======
->>>>>>> a85ce94f8c53a7281e97162b415297d808b7c473
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
@@ -58,10 +55,7 @@ app.use('/api/assignments', assignmentRoutes);
 app.use('/api/submissions', submissionRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
-<<<<<<< HEAD
 app.use('/api/users', userRoutes);
-=======
->>>>>>> a85ce94f8c53a7281e97162b415297d808b7c473
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

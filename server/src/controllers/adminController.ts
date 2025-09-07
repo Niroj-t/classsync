@@ -392,7 +392,6 @@ export const getAllSubmissions = async (req: Request, res: Response): Promise<vo
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
-<<<<<<< HEAD
     const status = req.query.status as string; // supports 'submitted' | 'late' | 'all'
 
     const query: any = {};
@@ -405,28 +404,12 @@ export const getAllSubmissions = async (req: Request, res: Response): Promise<vo
     const submissions = await Submission.find(query)
       .populate('assignmentId', 'title dueDate')
       .populate('studentId', 'name email role')
-=======
-    const status = req.query.status as string; // 'graded', 'ungraded', 'all'
-
-    const query: any = {};
-    
-    if (status === 'graded') {
-      query.grade = { $exists: true };
-    } else if (status === 'ungraded') {
-      query.grade = { $exists: false };
-    }
-
-    const submissions = await Submission.find(query)
-      .populate('assignment', 'title dueDate')
-      .populate('submittedBy', 'name email role')
->>>>>>> a85ce94f8c53a7281e97162b415297d808b7c473
       .sort({ submittedAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit);
 
     const total = await Submission.countDocuments(query);
 
-<<<<<<< HEAD
     // Map to legacy field names expected by client: assignment, submittedBy
     const mapped = submissions.map((s: any) => ({
       _id: s._id,
@@ -443,12 +426,6 @@ export const getAllSubmissions = async (req: Request, res: Response): Promise<vo
       success: true,
       data: {
         submissions: mapped,
-=======
-    res.json({
-      success: true,
-      data: {
-        submissions,
->>>>>>> a85ce94f8c53a7281e97162b415297d808b7c473
         pagination: {
           current: page,
           pages: Math.ceil(total / limit),
